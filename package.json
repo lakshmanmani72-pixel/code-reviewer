@@ -1,0 +1,218 @@
+{
+  "name": "pr-code-reviewer",
+  "displayName": "PR Code Reviewer",
+  "description": "Automated code review system triggered on pull requests via GitHub webhooks and APIs",
+  "version": "0.1.0",
+  "publisher": "your-publisher-name",
+  "engines": {
+    "vscode": "^1.85.0"
+  },
+  "categories": [
+    "Other"
+  ],
+  "activationEvents": [
+    "onStartupFinished"
+  ],
+  "main": "./out/extension.js",
+  "icon": "resources/icon.png",
+  "contributes": {
+    "commands": [
+      {
+        "command": "prCodeReviewer.startWebhookServer",
+        "title": "PR Reviewer: Start Webhook Server",
+        "icon": "$(radio-tower)"
+      },
+      {
+        "command": "prCodeReviewer.stopWebhookServer",
+        "title": "PR Reviewer: Stop Webhook Server",
+        "icon": "$(debug-stop)"
+      },
+      {
+        "command": "prCodeReviewer.reviewCurrentPR",
+        "title": "PR Reviewer: Review Current Pull Request",
+        "icon": "$(eye)"
+      },
+      {
+        "command": "prCodeReviewer.listOpenPRs",
+        "title": "PR Reviewer: List Open Pull Requests",
+        "icon": "$(git-pull-request)"
+      },
+      {
+        "command": "prCodeReviewer.recheckBranch",
+        "title": "PR Reviewer: Re-check Feature Branch",
+        "icon": "$(refresh)"
+      },
+      {
+        "command": "prCodeReviewer.configurePAT",
+        "title": "PR Reviewer: Configure GitHub Token",
+        "icon": "$(key)"
+      },
+      {
+        "command": "prCodeReviewer.openReviewPanel",
+        "title": "PR Reviewer: Open Review Panel",
+        "icon": "$(preview)"
+      },
+      {
+        "command": "prCodeReviewer.openChecklist",
+        "title": "PR Reviewer: Open Review Checklist & Settings",
+        "icon": "$(checklist)"
+      },
+      {
+        "command": "prCodeReviewer.showEndpoints",
+        "title": "PR Reviewer: Show API Endpoints & LLM Info",
+        "icon": "$(link)"
+      }
+    ],
+    "viewsContainers": {
+      "activitybar": [
+        {
+          "id": "prCodeReviewer",
+          "title": "PR Code Reviewer",
+          "icon": "$(git-pull-request)"
+        }
+      ]
+    },
+    "views": {
+      "prCodeReviewer": [
+        {
+          "id": "prCodeReviewer.pullRequests",
+          "name": "Pull Requests"
+        },
+        {
+          "id": "prCodeReviewer.reviewResults",
+          "name": "Review Results"
+        },
+        {
+          "id": "prCodeReviewer.webhookStatus",
+          "name": "Webhook Status"
+        }
+      ]
+    },
+    "viewsWelcome": [
+      {
+        "view": "prCodeReviewer.pullRequests",
+        "contents": "No pull requests loaded.\n[List Open PRs](command:prCodeReviewer.listOpenPRs)\n[Configure GitHub Token](command:prCodeReviewer.configurePAT)"
+      },
+      {
+        "view": "prCodeReviewer.webhookStatus",
+        "contents": "Webhook server is not running.\n[Start Webhook Server](command:prCodeReviewer.startWebhookServer)"
+      }
+    ],
+    "configuration": {
+      "title": "PR Code Reviewer",
+      "properties": {
+        "prCodeReviewer.githubToken": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub Personal Access Token for API access",
+          "markdownDescription": "GitHub Personal Access Token with `repo` scope. [Create one here](https://github.com/settings/tokens)"
+        },
+        "prCodeReviewer.webhookPort": {
+          "type": "number",
+          "default": 7890,
+          "description": "Port number for the local webhook server"
+        },
+        "prCodeReviewer.webhookSecret": {
+          "type": "string",
+          "default": "",
+          "description": "Secret key for validating GitHub webhook payloads"
+        },
+        "prCodeReviewer.autoReviewOnPR": {
+          "type": "boolean",
+          "default": true,
+          "description": "Automatically trigger code review when a PR webhook is received"
+        },
+        "prCodeReviewer.reviewChecks": {
+          "type": "object",
+          "default": {
+            "largeFiles": true,
+            "debugStatements": true,
+            "todoComments": true,
+            "securityPatterns": true,
+            "codeComplexity": true,
+            "namingConventions": true,
+            "duplicateCode": true,
+            "mergeConflicts": true
+          },
+          "description": "Enable or disable specific review checks"
+        },
+        "prCodeReviewer.maxFileSizeKB": {
+          "type": "number",
+          "default": 500,
+          "description": "Maximum file size in KB to flag as a large file"
+        },
+        "prCodeReviewer.owner": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub repository owner (user or organization)"
+        },
+        "prCodeReviewer.repo": {
+          "type": "string",
+          "default": "",
+          "description": "GitHub repository name"
+        },
+        "prCodeReviewer.geminiApiKey": {
+          "type": "string",
+          "default": "",
+          "description": "Groq API key for AI-powered code review (Llama 3.3 70B)",
+          "markdownDescription": "Groq API key for AI-powered review. [Get free key](https://console.groq.com/keys)"
+        },
+        "prCodeReviewer.aiReviewEnabled": {
+          "type": "boolean",
+          "default": false,
+          "description": "Enable AI-powered code review using Groq LLM (Llama 3.3 70B)"
+        },
+        "prCodeReviewer.customReviewRules": {
+          "type": "array",
+          "default": [],
+          "items": { "type": "string" },
+          "description": "Custom review rules/instructions sent to the AI reviewer"
+        }
+      }
+    },
+    "menus": {
+      "view/title": [
+        {
+          "command": "prCodeReviewer.listOpenPRs",
+          "when": "view == prCodeReviewer.pullRequests",
+          "group": "navigation"
+        },
+        {
+          "command": "prCodeReviewer.startWebhookServer",
+          "when": "view == prCodeReviewer.webhookStatus",
+          "group": "navigation"
+        }
+      ],
+      "view/item/context": [
+        {
+          "command": "prCodeReviewer.reviewCurrentPR",
+          "when": "view == prCodeReviewer.pullRequests && viewItem == pullRequest",
+          "group": "inline"
+        },
+        {
+          "command": "prCodeReviewer.recheckBranch",
+          "when": "view == prCodeReviewer.reviewResults && viewItem == reviewResult",
+          "group": "inline"
+        }
+      ]
+    }
+  },
+  "scripts": {
+    "vscode:prepublish": "npm run compile",
+    "compile": "tsc -p ./",
+    "watch": "tsc -watch -p ./",
+    "lint": "eslint src --ext ts"
+  },
+  "devDependencies": {
+    "@types/node": "^20.10.0",
+    "@types/vscode": "^1.85.0",
+    "@typescript-eslint/eslint-plugin": "^6.13.0",
+    "@typescript-eslint/parser": "^6.13.0",
+    "eslint": "^8.54.0",
+    "typescript": "^5.3.2"
+  },
+  "dependencies": {
+    "@octokit/rest": "^20.0.2",
+    "@octokit/webhooks": "^12.0.10"
+  }
+}
